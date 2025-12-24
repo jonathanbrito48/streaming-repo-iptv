@@ -1,39 +1,42 @@
 #!/bin/bash
 
 # 1. Configurações
-RAW_URL="LINK_DO_ARQUIVO_DO_REPO_X_AQUI"
+# Usando a URL otimizada
+RAW_URL="https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2025/master/VivoFibra.m3u8"
 EXTERNAL_DIR="external"
-TEMP_FILE="$EXTERNAL_DIR/original.m3u"
-FINAL_FILE="$EXTERNAL_DIR/My_list.m3u"
+TEMP_FILE="$EXTERNAL_DIR/original.m3u8"
+FINAL_FILE="$EXTERNAL_DIR/My_list.m3u8"
+
+# Lista de bloqueio (ajuste conforme necessário)
 PALAVRAS_PROIBIDAS="Adultos|XXX|Porn|Sexy|18+|PLAYBOY|SEXTREME|SEX PRIVE|VENUS|Erotic|Adult|ADULTO"
 
-# 2. GARANTIR QUE A PASTA EXISTE (O segredo para o erro sumir)
+# 2. Garantir infraestrutura
 mkdir -p "$EXTERNAL_DIR"
 
-echo "Iniciando download..."
-# 3. Baixa o arquivo original
-curl -sL "$RAW_URL" -o "$TEMP_FILE"
+echo "Iniciando download de: $RAW_URL"
 
-# Verifica se o download funcionou
-if [ ! -f "$TEMP_FILE" ]; then
-    echo "Erro: Falha ao baixar o arquivo original!"
+# 3. Download com headers de User-Agent (alguns servidores bloqueiam curl puro)
+curl -f -sL -A "Mozilla/5.0" "$RAW_URL" -o "$TEMP_FILE"
+
+# Verificação de integridade
+if [ ! -s "$TEMP_FILE" ]; then
+    echo "ERRO: Arquivo baixado está vazio ou não foi encontrado!"
     exit 1
 fi
 
-echo "Limpando a lista..."
-# 4. A Mágica do AWK (Processamento robusto)
+echo "Limpando a lista... Removendo termos: $PALAVRAS_PROIBIDAS"
+
+# 4. Processamento AWK
+# Esta lógica remove o par: a linha do #EXTINF que contém o termo e a linha do link logo abaixo
 awk -v pattern="$PALAVRAS_PROIBIDAS" '
     BEGIN { IGNORECASE = 1 }
     /^#EXTINF/ { 
-        header = $0; 
         if ($0 ~ pattern) { skip = 1; next } 
-        else { skip = 0; print header; next }
+        else { skip = 0; print; next }
     }
     { if (!skip) print }
 ' "$TEMP_FILE" > "$FINAL_FILE"
 
-echo "Limpando arquivos temporários..."
-# 5. Limpeza
+# 5. Limpeza final
 rm "$TEMP_FILE"
-
-echo "Sucesso! Arquivo gerado em $FINAL_FILE"
+echo "Sucesso! Lista gerada em $FINAL_FILE"
