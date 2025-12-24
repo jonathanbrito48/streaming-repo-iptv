@@ -1,20 +1,27 @@
 #!/bin/bash
 
-# Configurações
-RAW_URL="https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2025/refs/heads/master/VivoFibra.m3u8"
-TEMP_FILE="external/original.m3u"
-FINAL_FILE="external/My_list.m3u"
-# Palavras-chave separadas por | (pipe) para o filtro
+# 1. Configurações
+RAW_URL="LINK_DO_ARQUIVO_DO_REPO_X_AQUI"
+EXTERNAL_DIR="external"
+TEMP_FILE="$EXTERNAL_DIR/original.m3u"
+FINAL_FILE="$EXTERNAL_DIR/My_list.m3u"
 PALAVRAS_PROIBIDAS="Adultos|XXX|Porn|Sexy|18+|PLAYBOY|SEXTREME|SEX PRIVE|VENUS|Erotic|Adult|ADULTO"
 
-# 1. Baixa o arquivo original
+# 2. GARANTIR QUE A PASTA EXISTE (O segredo para o erro sumir)
+mkdir -p "$EXTERNAL_DIR"
+
+echo "Iniciando download..."
+# 3. Baixa o arquivo original
 curl -sL "$RAW_URL" -o "$TEMP_FILE"
 
-# 2. A Mágica: Remove a linha que contém a palavra E a linha subsequente (o link)
-# Usamos o grep para identificar as linhas e o sed para remover o bloco
-grep -Ei -B 1 "$PALAVRAS_PROIBIDAS" "$TEMP_FILE" | grep -v "^--" > demover.txt
+# Verifica se o download funcionou
+if [ ! -f "$TEMP_FILE" ]; then
+    echo "Erro: Falha ao baixar o arquivo original!"
+    exit 1
+fi
 
-# Mas uma forma mais robusta com AWK para garantir a integridade do M3U:
+echo "Limpando a lista..."
+# 4. A Mágica do AWK (Processamento robusto)
 awk -v pattern="$PALAVRAS_PROIBIDAS" '
     BEGIN { IGNORECASE = 1 }
     /^#EXTINF/ { 
@@ -25,5 +32,8 @@ awk -v pattern="$PALAVRAS_PROIBIDAS" '
     { if (!skip) print }
 ' "$TEMP_FILE" > "$FINAL_FILE"
 
-# 3. Limpeza
+echo "Limpando arquivos temporários..."
+# 5. Limpeza
 rm "$TEMP_FILE"
+
+echo "Sucesso! Arquivo gerado em $FINAL_FILE"
