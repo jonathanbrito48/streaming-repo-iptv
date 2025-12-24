@@ -1,0 +1,30 @@
+name: M3U Purge & Sync
+on:
+  schedule:
+    - cron: '45 */12 * * *' # Roda a cada 12 horas
+  workflow_dispatch:      # Para você rodar manualmente quando quiser
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set permissions
+        run: chmod +x scripts/clean-m3u.sh
+
+      - name: Run Clean Script
+        run: ./scripts/clean-m3u.sh
+
+      - name: Push Changes
+        run: |
+          git config user.name "M3U-Cleaner-Bot"
+          git config user.email "bot@github.com"
+          git add external/lista_limpa.m3u
+          if ! git diff --quiet; then
+            git commit -m "Update: Lista M3U limpa em $(date +'%d/%m/%Y')"
+            git push
+          else
+            echo "Nenhuma mudança detectada na lista."
+          fi
