@@ -17,14 +17,20 @@ jobs:
       - name: Run Clean Script
         run: ./scripts/clean-m3u.sh
 
-      - name: Push Changes
+      - name: Commit e Push se houver mudanças
         run: |
-          git config user.name "M3U-Cleaner-Bot"
-          git config user.email "bot@github.com"
-          git add external/My_list.m3u8
-          if ! git diff --quiet; then
-            git commit -m "Update: Lista M3U limpa em $(date +'%d/%m/%Y')"
-            git push
-          else
-            echo "Nenhuma mudança detectada na lista."
-          fi
+            git config user.name "M3U-Cleaner-Bot"
+            git config user.email "bot@github.com"
+          
+            # Adiciona o arquivo gerado
+            git add external/My_list.m3u8
+            
+            # O segredo: verificamos o status sem deixar o shell falhar
+            if [ -n "$(git status --porcelain external/My_list.m3u8)" ]; then
+              echo "Mudanças detectadas. Commitando..."
+              git commit -m "Update: Lista M3U limpa em $(date +'%d/%m/%Y %H:%M')"
+              git push
+            else
+              echo "Nenhuma mudança relevante no conteúdo da lista. Pulando commit."
+            fi
+  
