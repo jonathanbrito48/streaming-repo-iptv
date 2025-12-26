@@ -26,27 +26,17 @@ fi
 
 echo "Limpando a lista... Removendo termos: $PALAVRAS_PROIBIDAS"
 
-# 4. Processamento AWK Otimizado
+# 4. Processamento AWK
+# Esta lógica remove o par: a linha do #EXTINF que contém o termo e a linha do link logo abaixo
 awk -v pattern="$PALAVRAS_PROIBIDAS" '
     BEGIN { IGNORECASE = 1 }
-    # Se a linha for metadado de canal
     /^#EXTINF/ { 
         if ($0 ~ pattern) { skip = 1; next } 
         else { skip = 0; print; next }
     }
-    # Se a linha for qualquer outra tag (ex: #EXTM3U)
-    /^#/ { 
-        if (!skip) print; next 
-    }
-    # Se a linha for a URL e não estivermos em modo "skip"
-    { 
-        if (!skip) {
-            # Remove espaços em branco e anexa .ts
-            sub(/[[:space:]]+$/, "", $0)
-            print $0 ".ts"
-        }
-    }
+    { if (!skip) print }
 ' "$TEMP_FILE" > "$FINAL_FILE"
 
+# 5. Limpeza final
 rm "$TEMP_FILE"
 echo "Sucesso! Lista gerada em $FINAL_FILE"
