@@ -2,7 +2,7 @@
 
 # 1. Configurações
 # Usando a URL otimizada
-RAW_URL="https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/refs/heads/master/Nova%20Lista.m3u8"
+RAW_URL="https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/refs/heads/master/Nova%20Lista.m3u"
 EXTERNAL_DIR="external"
 TEMP_FILE="$EXTERNAL_DIR/original.m3u8"
 FINAL_FILE="$EXTERNAL_DIR/My_list.m3u8"
